@@ -162,7 +162,7 @@ void SequentialCompressionReader::load_next_file()
   ++current_file_iterator_;
   if (compression_mode_ == rosbag2_compression::CompressionMode::FILE) {
     if (decompressor_ == nullptr) {
-      throw std::runtime_error{"Bagfile is not opened.};
+      throw std::runtime_error{"Bagfile is not opened."};
     }
 
     ROSBAG2_COMPRESSION_LOG_DEBUG_STREAM("Decompressing " << get_current_file().c_str());
