@@ -30,6 +30,7 @@ find_package(rmw REQUIRED)
 find_package(shared_queues_vendor REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
+  src/rosbag2_transport/converter.cpp
   src/rosbag2_transport/player.cpp
   src/rosbag2_transport/formatter.cpp
   src/rosbag2_transport/generic_publisher.cpp

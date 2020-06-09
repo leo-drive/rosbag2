@@ -37,6 +37,7 @@
 #include "formatter.hpp"
 #include "player.hpp"
 #include "recorder.hpp"
+#include "converter.hpp"
 #include "rosbag2_node.hpp"
 
 namespace rosbag2_transport
@@ -79,6 +80,24 @@ void Rosbag2Transport::record(
     recorder.record(record_options);
   } catch (std::runtime_error & e) {
     ROSBAG2_TRANSPORT_LOG_ERROR("Failed to record: %s", e.what());
+  }
+}
+
+void Rosbag2Transport::convert(
+  const StorageOptions & input_storage_options,
+  const StorageOptions & output_storage_options,
+  const ConvertOptions & convert_options)
+{
+  try {
+    reader_->open(input_storage_options, {"", convert_options.rmw_serialization_format});
+    writer_->open(
+      output_storage_options,
+      {convert_options.rmw_serialization_format, convert_options.rmw_serialization_format});
+
+    Converter converter(reader_, writer_);
+    converter.convert(convert_options.rmw_serialization_format);
+  } catch (std::runtime_error & e) {
+    ROSBAG2_TRANSPORT_LOG_ERROR("Failed to convert: %s", e.what());
   }
 }
 

@@ -23,6 +23,7 @@
 #include "rosbag2_transport/play_options.hpp"
 #include "rosbag2_transport/record_options.hpp"
 #include "rosbag2_transport/storage_options.hpp"
+#include "rosbag2_transport/convert_options.hpp"
 #include "rosbag2_transport/visibility_control.hpp"
 
 namespace rosbag2
@@ -56,6 +57,11 @@ public:
 
   ROSBAG2_TRANSPORT_PUBLIC
   void shutdown();
+
+  ROSBAG2_TRANSPORT_PUBLIC
+  void convert(
+    const StorageOptions & in_options, const StorageOptions & out_options,
+    const ConvertOptions & convert_options);
 
   /**
    * Records topics to a bagfile. Subscription happens at startup time, hence the topics must

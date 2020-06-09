@@ -20,6 +20,7 @@
 #include "rosbag2_transport/rosbag2_transport.hpp"
 #include "rosbag2_transport/record_options.hpp"
 #include "rosbag2_transport/storage_options.hpp"
+#include "rosbag2_transport/convert_options.hpp"
 #include "rmw/rmw.h"
 
 static PyObject *
@@ -49,16 +50,17 @@ rosbag2_transport_record(PyObject * Py_UNUSED(self), PyObject * args, PyObject *
   uint64_t polling_interval_ms = 100;
   unsigned long long max_bagfile_size = 0;  // NOLINT
   PyObject * topics = nullptr;
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ssss|bbKKO", const_cast<char **>(kwlist),
-    &uri,
-    &storage_id,
-    &serilization_format,
-    &node_prefix,
-    &all,
-    &no_discovery,
-    &polling_interval_ms,
-    &max_bagfile_size,
-    &topics))
+  if (!PyArg_ParseTupleAndKeywords(
+      args, kwargs, "ssss|bbKKO", const_cast<char **>(kwlist),
+      &uri,
+      &storage_id,
+      &serilization_format,
+      &node_prefix,
+      &all,
+      &no_discovery,
+      &polling_interval_ms,
+      &max_bagfile_size,
+      &topics))
   {
     return nullptr;
   }
@@ -96,6 +98,50 @@ rosbag2_transport_record(PyObject * Py_UNUSED(self), PyObject * args, PyObject *
 }
 
 static PyObject *
+rosbag2_transport_convert(PyObject * Py_UNUSED(self), PyObject * args, PyObject * kwargs)
+{
+  rosbag2_transport::StorageOptions in_options{};
+  rosbag2_transport::StorageOptions out_options{};
+  rosbag2_transport::ConvertOptions convert_options{};
+  static const char * kwlist[] = {
+    "in_uri",
+    "in_storage_id",
+    "out_uri",
+    "out_storage_id",
+    "serialization_format",
+    nullptr
+  };
+  char * in_uri;
+  char * in_storage_id;
+  char * out_uri;
+  char * out_storage_id;
+  char * serialization_format;
+  if (!PyArg_ParseTupleAndKeywords(
+      args, kwargs, "sssss", const_cast<char **>(kwlist), &in_uri, &in_storage_id,
+      &out_uri,
+      &out_storage_id,
+      &serialization_format))
+  {
+    return nullptr;
+  }
+
+  in_options.uri = std::string(in_uri);
+  in_options.storage_id = std::string(in_storage_id);
+
+  out_options.uri = std::string(out_uri);
+  out_options.storage_id = std::string(out_storage_id);
+
+  convert_options.rmw_serialization_format = std::string(serialization_format).empty() ?
+    rmw_get_serialization_format() :
+    serialization_format;
+
+  rosbag2_transport::Rosbag2Transport transport;
+  transport.convert(in_options, out_options, convert_options);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
 rosbag2_transport_play(PyObject * Py_UNUSED(self), PyObject * args, PyObject * kwargs)
 {
   rosbag2_transport::PlayOptions play_options{};
@@ -113,11 +159,12 @@ rosbag2_transport_play(PyObject * Py_UNUSED(self), PyObject * args, PyObject * k
   char * storage_id;
   char * node_prefix;
   size_t read_ahead_queue_size;
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sss|k", const_cast<char **>(kwlist),
-    &uri,
-    &storage_id,
-    &node_prefix,
-    &read_ahead_queue_size))
+  if (!PyArg_ParseTupleAndKeywords(
+      args, kwargs, "sss|k", const_cast<char **>(kwlist),
+      &uri,
+      &storage_id,
+      &node_prefix,
+      &read_ahead_queue_size))
   {
     return nullptr;
   }
@@ -176,13 +223,19 @@ static PyMethodDef rosbag2_transport_methods[] = {
     "info", reinterpret_cast<PyCFunction>(rosbag2_transport_info), METH_VARARGS | METH_KEYWORDS,
     "Print bag info"
   },
+  {
+    "convert", reinterpret_cast<PyCFunction>(rosbag2_transport_convert),
+    METH_VARARGS | METH_KEYWORDS,
+    "Convert bag storage or serialization format"
+  },
   {nullptr, nullptr, 0, nullptr}  /* sentinel */
 };
 #if __GNUC__ >= 8
 # pragma GCC diagnostic pop
 #endif
 
-PyDoc_STRVAR(rosbag2_transport__doc__,
+PyDoc_STRVAR(
+  rosbag2_transport__doc__,
   "Python module for rosbag2 transport");
 
 /// Define the Python module
