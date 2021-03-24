@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <sstream>
 
 #include "rcpputils/filesystem_helper.hpp"
 
